@@ -571,8 +571,19 @@ class Visualizations {
                 g.select('.trend-line').attr('d', newTrendLine(sortedData));
             });
 
-        // Apply zoom to entire SVG for better control
-        svg.call(zoom);
+        // Pointer-centered zoom: capture events only over the plotting area
+        const zoomOverlay = g.append('rect')
+            .attr('class', 'zoom-overlay')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', width)
+            .attr('height', height)
+            .style('fill', 'transparent')
+            .style('pointer-events', 'all')
+            .style('cursor', 'crosshair');
+
+        // Apply zoom to overlay so wheel focuses around the cursor position
+        zoomOverlay.call(zoom);
 
         // Add reset zoom button for deep zoom functionality
         const resetButton = svg.append('g')
@@ -588,7 +599,7 @@ class Visualizations {
             .attr('stroke-width', 1)
             .style('cursor', 'pointer')
             .on('click', () => {
-                svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+                zoomOverlay.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
             });
 
         resetButton.append('text')
