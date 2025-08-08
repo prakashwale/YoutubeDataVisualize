@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Trending Data Visualization</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouTube Trending Data Visualization</h1>
+            <p>Interactive visualizations of YouTube trending videos across different countries</p>
+        </header>
+
+        <nav class="navigation">
+            <button class="nav-btn active" data-viz="overview">🏠 Overview</button>
+            <button class="nav-btn" data-viz="bar-chart">📊 Views by Country</button>
+            <button class="nav-btn" data-viz="pie-chart">🥧 Category Distribution</button>
+            <button class="nav-btn" data-viz="timeline">📈 Trending Timeline</button>
+            <button class="nav-btn" data-viz="scatter">🔬 Views vs Likes</button>
+            <button class="nav-btn" data-viz="heatmap">🗺️ Country Heatmap</button>
+            <button class="nav-btn" data-viz="treemap">🧩 Channel Treemap</button>
+            <button class="nav-btn" data-viz="engagement">💬 Engagement Breakdown</button>
+                            <button class="nav-btn" data-viz="publishing-timing">📅 Publishing Strategy</button>
+                <button class="nav-btn" data-viz="tag-evolution">🏷️ Tag Trends</button>
+                <button class="nav-btn" data-viz="tag-flow">🌊 Tag Flow</button>
+
+        </nav>
+
+        <main class="visualization-container">
+            <div id="overview" class="visualization active">
+                <h2>Project Overview</h2>
+                <p>This project analyzes YouTube trending data from multiple countries including:</p>
+                <ul>
+                    <li>🇨🇦 Canada (CA)</li>
+                    <li>🇩🇪 Germany (DE)</li>
+                    <li>🇫🇷 France (FR)</li>
+                    <li>🇬🇧 United Kingdom (GB)</li>
+                    <li>🇮🇳 India (IN)</li>
+                    <li>🇯🇵 Japan (JP)</li>
+                    <li>🇰🇷 South Korea (KR)</li>
+                    <li>🇲🇽 Mexico (MX)</li>
+                    <li>🇷🇺 Russia (RU)</li>
+                    <li>🇺🇸 United States (US)</li>
+                </ul>
+                <p>Navigate through different visualizations using the buttons above.</p>
+            </div>
+
+            <div id="bar-chart" class="visualization">
+                <h2>Average Views by Country</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Compare average video views across countries to spot strong markets and audience potential.</p>
+                    <p><strong>How to Read:</strong> Each bar represents a country. Longer bars = higher average views. Hover for details, scroll to zoom, and click a bar for a quick summary.</p>
+                </div>
+                <div class="chart-container">
+                    <div class="zoom-instructions">
+                        💡 <strong>Advanced Features:</strong> Zoom with mouse wheel, click bars for details, export charts
+                    </div>
+                </div>
+            </div>
+
+            <div id="pie-chart" class="visualization">
+                <h2>Video Category Distribution</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Understand which content categories dominate for the selected region.</p>
+                    <p><strong>How to Read:</strong> Slice size shows the share of videos in each category. Hover to see exact counts and percentages. Use the country filter to change the view.</p>
+                </div>
+                <div class="filter-controls">
+                    <label for="country-filter">Filter by Country:</label>
+                    <select id="country-filter">
+                        <option value="all">All Countries</option>
+                    </select>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+
+            <div id="timeline" class="visualization">
+                <h2>Trending Videos Timeline</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Track how many videos trended over time and identify spikes of activity.</p>
+                    <p><strong>How to Read:</strong> The line shows daily trending counts. Points indicate exact values. Hover for details; scroll to zoom and drag to pan. Use the country filter to focus the view.</p>
+                </div>
+                <div class="filter-controls">
+                    <label for="timeline-country-filter">Filter by Country:</label>
+                    <select id="timeline-country-filter">
+                        <option value="all">All Countries</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <div class="zoom-instructions">
+                        💡 <strong>Advanced Features:</strong> Zoom with mouse wheel, drag to pan, click points for details
+                    </div>
+                </div>
+            </div>
+
+            <div id="scatter" class="visualization">
+                <h2>Views vs Likes Correlation</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Explore the relationship between views and likes to gauge engagement quality.</p>
+                    <p><strong>How to Read:</strong> Each dot is a video. X = views, Y = likes. A tighter upward trend means stronger correlation. Hover for details; zoom deeply and click "Reset Zoom" to return.</p>
+                </div>
+                <div class="filter-controls">
+                    <label for="scatter-country-filter">Filter by Country:</label>
+                    <select id="scatter-country-filter">
+                        <option value="all">All Countries</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <div class="zoom-instructions">
+                        💡 <strong>Advanced Features:</strong> Deep zoom with mouse wheel (up to 50x), drag to pan, click "Reset Zoom" to return
+                    </div>
+                </div>
+            </div>
+
+            <div id="heatmap" class="visualization">
+                <h2>Country Activity Heatmap</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Compare how popular each category is across countries.</p>
+                    <p><strong>How to Read:</strong> Columns are countries, rows are categories. Darker cells indicate a higher share of videos in that category. Hover to see percentages and counts.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="heatmap-category-filter">Category View:</label>
+                        <select id="heatmap-category-filter">
+                            <option value="all" selected>All Categories</option>
+                            <option value="top10">Top 10 Categories</option>
+                            <option value="top5">Top 5 Categories</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label style="color: #7f8c8d; font-size: 12px;">🎯 <strong>Tip:</strong> Focus on Top views to highlight the most impactful categories.</label>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+
+            <div id="treemap" class="visualization">
+                <h2>Top Channels Treemap</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Identify top-performing channels by total views and content footprint.</p>
+                    <p><strong>How to Read:</strong> Each rectangle is a channel sized by total views. Hover for views, video count, and country coverage. Use filters to change country and list size.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="channel-count-display">Total Unique Channels:</label>
+                        <span id="channel-count-display">Loading...</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="treemap-channel-limit">Number of Channels to Display:</label>
+                        <select id="treemap-channel-limit">
+                            <option value="10">Top 10</option>
+                            <option value="25" selected>Top 25</option>
+                            <option value="50">Top 50</option>
+                            <option value="100">Top 100</option>
+                            <option value="200">Top 200</option>
+                            <option value="500">Top 500</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="treemap-country-filter">Filter by Country:</label>
+                        <select id="treemap-country-filter">
+                            <option value="all" selected>All Countries</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+            <div id="engagement" class="visualization">
+                <h2>Engagement Breakdown</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> See how engagement splits between likes, dislikes, and comments.</p>
+                    <p><strong>How to Read:</strong> The donut segments show totals for each metric. Hover to see values. Use the filters to focus on a specific country or category.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="engagement-country-filter">Filter by Country:</label>
+                        <select id="engagement-country-filter">
+                            <option value="all" selected>All Countries</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="engagement-category-filter">Filter by Category:</label>
+                        <select id="engagement-category-filter">
+                            <option value="all" selected>All Categories</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+
+            <div id="publishing-timing" class="visualization">
+                <h2>Publishing Timing Strategy</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Discover the optimal times to publish your videos for maximum engagement and success.</p>
+                    <p><strong>How to Read:</strong> Darker colors indicate higher success rates. Find the best day-hour combinations for your content strategy.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="timing-country-filter">Country:</label>
+                        <select id="timing-country-filter">
+                            <option value="global" selected>🌍 Global (All Countries)</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label style="color: #7f8c8d; font-size: 12px;">💡 <strong>Tip:</strong> Upload during peak times (darker areas)!</label>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 450px;"></div>
+            </div>
+
+            <div id="tag-evolution" class="visualization">
+                <h2>Popular Tags </h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Watch tags compete for popularity over time periods by country. Perfect solution for avoiding line tangles with clear competition rankings.</p>
+                    <p><strong>How to Read:</strong> Select a country to see regional tag trends, or choose Global for worldwide patterns. Horizontal bars show tag usage. Longer bars = more popular tags.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="tag-country-filter">Country:</label>
+                        <select id="tag-country-filter">
+                            <option value="global" selected>🌍 Global (All Countries)</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="tag-view-filter">Data Scope:</label>
+                        <select id="tag-view-filter">
+                            <option value="overview" selected>All Popular Tags (15 tags)</option>
+                            <option value="top-tags">Top Performers Only (10 tags)</option>
+                            <option value="trending">Highly Trending (8 tags)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label style="color: #7f8c8d; font-size: 12px;">🏆 <strong>Tip:</strong> Time your content with trending tags!</label>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 500px;"></div>
+            </div>
+
+            <div id="tag-flow" class="visualization">
+                <h2>Tag Flow Diagram</h2>
+                <div class="chart-description">
+                    <p style="color: white;"><strong>Purpose:</strong> Discover which tags work best for specific content categories by country. See the flow of tags from creators to categories.</p>
+                    <p style="color: white;"><strong>How to Read:</strong> Tags (left) flow to Categories (right). Thicker flows = stronger connections. Hover for detailed insights about tag-category relationships.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="flow-country-filter">Country:</label>
+                        <select id="flow-country-filter">
+                            <option value="global" selected>🌍 Global (All Countries)</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="flow-detail-filter">Detail Level:</label>
+                        <select id="flow-detail-filter">
+                            <option value="focused">🎯 Focused View (12 tags, 6 categories)</option>
+                            <option value="balanced" selected>⚖️ Balanced View (15 tags, 7 categories)</option>
+                            <option value="detailed">🔍 Detailed View (20 tags, 8 categories)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label style="color: #7f8c8d; font-size: 12px;">🌊 <strong>Tip:</strong> Find perfect tag-category combinations for your content!</label>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 600px;"></div>
+            </div>
+
+        </main>
+
+        <footer id="dynamic-footer">
+            <p>&copy; 2024 YouTube Analytics Dashboard</p>
+            <div class="chart-authors" id="chart-authors">
+                <p><strong>Chart Development By:</strong></p>
+                <p id="author-credits"></p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/data-loader.js"></script>
+    <script src="js/visualizations.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
