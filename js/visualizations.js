@@ -1978,3 +1978,171 @@ class Visualizations {
     }
 
 }
+
+// Extend Visualizations with two new charts
+Visualizations.prototype.createCategoryEngagementStacked = function(data, container) {
+    this.clearVisualization(container);
+    const margin = { top: 30, right: 20, bottom: 80, left: 60 };
+    const { width: cw, height: ch } = container.getBoundingClientRect();
+    const width = cw - margin.left - margin.right;
+    const height = Math.max(320, ch - margin.top - margin.bottom);
+
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const categories = Object.keys(data);
+    const seriesKeys = ['Likes', 'Comments', 'Dislikes'];
+    const stacked = d3.stack().keys(seriesKeys)(categories.map(c => ({ category: c, ...data[c] })));
+
+    const x = d3.scaleBand().domain(categories).range([0, width]).padding(0.15);
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(categories, c => seriesKeys.reduce((s, k) => s + (data[c][k] || 0), 0)) || 0])
+        .nice()
+        .range([height, 0]);
+
+    const color = d3.scaleOrdinal().domain(seriesKeys).range(['#3498db', '#2ecc71', '#e67e22']);
+
+    const groups = g.selectAll('.series')
+        .data(stacked)
+        .enter().append('g')
+        .attr('class', 'series')
+        .attr('fill', d => color(d.key));
+
+    groups.selectAll('rect')
+        .data(d => d.map(v => ({ key: d.key, category: v.data.category, y0: v[0], y1: v[1], value: (v[1] - v[0]) })))
+        .enter().append('rect')
+        .attr('x', d => x(d.category))
+        .attr('y', d => y(d.y1))
+        .attr('height', d => y(d.y0) - y(d.y1))
+        .attr('width', x.bandwidth())
+        .on('mouseover', (event, d) => {
+            this.tooltip.transition().duration(150).style('opacity', 0.95);
+            this.tooltip.html(`<strong>${d.category}</strong><br/>${d.key}: ${d3.format(',')(d.value)}`)
+                .style('left', `${event.pageX + 10}px`).style('top', `${event.pageY - 24}px`);
+        })
+        .on('mouseout', () => this.tooltip.transition().duration(300).style('opacity', 0));
+
+    g.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x))
+        .selectAll('text').attr('transform', 'rotate(-35)').style('text-anchor', 'end');
+    g.append('g').call(d3.axisLeft(y).tickFormat(d3.format('.2s')));
+
+    const legend = svg.append('g').attr('transform', `translate(${margin.left},10)`);
+    seriesKeys.forEach((k, i) => {
+        const lg = legend.append('g').attr('transform', `translate(${i * 130},0)`);
+        lg.append('rect').attr('width', 12).attr('height', 12).attr('fill', color(k));
+        lg.append('text').attr('x', 18).attr('y', 10).text(k).style('font-size', '12px');
+    });
+};
+
+Visualizations.prototype.createTopVideosBubble = function(videos, container) {
+    this.clearVisualization(container);
+    const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+    const { width: cw, height: ch } = container.getBoundingClientRect();
+    const width = cw - margin.left - margin.right;
+    const height = Math.max(360, ch - margin.top - margin.bottom);
+
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear().domain([0, d3.max(videos, d => d.views) || 1]).nice().range([0, width]);
+    const y = d3.scaleLinear().domain([0, d3.max(videos, d => d.likes) || 1]).nice().range([height, 0]);
+    const r = d3.scaleSqrt().domain([0, d3.max(videos, d => d.views) || 1]).range([3, 28]);
+    const color = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(videos, d => d.ratio) || 0.1]);
+
+    g.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d => d3.format('.2s')(d)));
+    g.append('g').call(d3.axisLeft(y).tickFormat(d => d3.format('.2s')(d)));
+
+    g.selectAll('circle')
+        .data(videos)
+        .enter().append('circle')
+        .attr('cx', d => x(d.views))
+        .attr('cy', d => y(d.likes))
+        .attr('r', d => r(d.views))
+        .attr('fill', d => color(d.ratio))
+        .attr('opacity', 0.8)
+        .attr('stroke', 'white')
+        .on('mouseover', (event, d) => {
+            this.tooltip.transition().duration(150).style('opacity', 0.95);
+            this.tooltip.html(
+                `<strong>${d.title.substring(0, 60)}</strong><br/>` +
+                `Views: ${d3.format(',')(d.views)}<br/>Likes: ${d3.format(',')(d.likes)}<br/>Ratio: ${(d.ratio*100).toFixed(2)}%`
+            ).style('left', `${event.pageX + 10}px`).style('top', `${event.pageY - 24}px`);
+        })
+        .on('mouseout', () => this.tooltip.transition().duration(300).style('opacity', 0));
+
+    // Axis labels
+    g.append('text').attr('x', width/2).attr('y', height + 35).attr('text-anchor', 'middle').text('Views');
+    g.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height/2).attr('y', -45)
+        .attr('text-anchor', 'middle')
+        .text('Likes');
+};
+
+// Channel Leaderboard - horizontal bar chart of channels by total views
+Visualizations.prototype.createChannelLeaderboard = function(channels, container) {
+    this.clearVisualization(container);
+    const margin = { top: 20, right: 120, bottom: 30, left: 160 };
+    const { width: cw, height: ch } = container.getBoundingClientRect();
+    const width = cw - margin.left - margin.right;
+    const height = Math.max(300, ch - margin.top - margin.bottom);
+
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const y = d3.scaleBand()
+        .domain(channels.map(d => d.name))
+        .range([0, height])
+        .padding(0.15);
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(channels, d => d.totalViews) || 1])
+        .nice()
+        .range([0, width]);
+
+    g.append('g').call(d3.axisLeft(y).tickSize(0));
+    g.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format('.2s')));
+
+    g.selectAll('.lb-bar')
+        .data(channels)
+        .enter().append('rect')
+        .attr('class', 'lb-bar')
+        .attr('y', d => y(d.name))
+        .attr('x', 0)
+        .attr('height', y.bandwidth())
+        .attr('width', d => x(d.totalViews))
+        .attr('fill', '#3498db')
+        .attr('stroke', '#fff')
+        .on('mouseover', (event, d) => {
+            this.tooltip.transition().duration(150).style('opacity', 0.95);
+            this.tooltip.html(`
+                <strong>${d.name}</strong><br/>
+                Total Views: ${d3.format(',')(d.totalViews)}<br/>
+                Videos: ${d.videoCount}<br/>
+                Countries: ${d.countries.join(', ')}
+            `).style('left', `${event.pageX + 10}px`).style('top', `${event.pageY - 24}px`);
+        })
+        .on('mouseout', () => this.tooltip.transition().duration(300).style('opacity', 0));
+
+    // Value labels
+    g.selectAll('.lb-label')
+        .data(channels)
+        .enter().append('text')
+        .attr('class', 'lb-label')
+        .attr('x', d => x(d.totalViews) + 6)
+        .attr('y', d => y(d.name) + y.bandwidth()/2)
+        .attr('dy', '0.35em')
+        .style('font-size', '11px')
+        .text(d => d3.format('.2s')(d.totalViews));
+};

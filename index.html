@@ -23,10 +23,13 @@
             <button class="nav-btn" data-viz="scatter">🔬 Views vs Likes</button>
             <button class="nav-btn" data-viz="heatmap">🗺️ Country Heatmap</button>
             <button class="nav-btn" data-viz="treemap">🧩 Channel Treemap</button>
+            <button class="nav-btn" data-viz="channel-leaderboard">🏅 Channel Leaderboard</button>
             <button class="nav-btn" data-viz="engagement">💬 Engagement Breakdown</button>
                             <button class="nav-btn" data-viz="publishing-timing">📅 Publishing Strategy</button>
                 <button class="nav-btn" data-viz="tag-evolution">🏷️ Tag Trends</button>
                 <button class="nav-btn" data-viz="tag-flow">🌊 Tag Flow</button>
+            <button class="nav-btn" data-viz="category-engagement">📚 Category Engagement</button>
+            <button class="nav-btn" data-viz="top-videos-bubble">🔵 Top Videos Bubble</button>
 
         </nav>
 
@@ -103,10 +106,82 @@
                     <p><strong>How to Read:</strong> Each dot is a video. X = views, Y = likes. A tighter upward trend means stronger correlation. Hover for details; zoom deeply and click "Reset Zoom" to return.</p>
                 </div>
                 <div class="filter-controls">
-                    <label for="scatter-country-filter">Filter by Country:</label>
-                    <select id="scatter-country-filter">
-                        <option value="all">All Countries</option>
-                    </select>
+                    <div class="control-group">
+                        <label for="scatter-country-filter">Filter by Country:</label>
+                        <select id="scatter-country-filter">
+                            <option value="all">All Countries</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="views-min">Views Range:</label>
+                        <div class="range-inputs">
+                            <select id="views-min">
+                                <option value="">Min Views</option>
+                                <option value="0">0</option>
+                                <option value="10000">10K</option>
+                                <option value="50000">50K</option>
+                                <option value="100000">100K</option>
+                                <option value="250000">250K</option>
+                                <option value="500000">500K</option>
+                                <option value="1000000">1M</option>
+                                <option value="2000000">2M</option>
+                                <option value="5000000">5M</option>
+                                <option value="10000000">10M</option>
+                                <option value="20000000">20M</option>
+                                <option value="50000000">50M</option>
+                            </select>
+                            <select id="views-max">
+                                <option value="">Max Views</option>
+                                <option value="50000">50K</option>
+                                <option value="100000">100K</option>
+                                <option value="250000">250K</option>
+                                <option value="500000">500K</option>
+                                <option value="1000000">1M</option>
+                                <option value="2000000">2M</option>
+                                <option value="5000000">5M</option>
+                                <option value="10000000">10M</option>
+                                <option value="20000000">20M</option>
+                                <option value="50000000">50M</option>
+                                <option value="100000000">100M</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="likes-min">Likes Range:</label>
+                        <div class="range-inputs">
+                            <select id="likes-min">
+                                <option value="">Min Likes</option>
+                                <option value="0">0</option>
+                                <option value="100">100</option>
+                                <option value="500">500</option>
+                                <option value="1000">1K</option>
+                                <option value="2000">2K</option>
+                                <option value="5000">5K</option>
+                                <option value="10000">10K</option>
+                                <option value="20000">20K</option>
+                                <option value="50000">50K</option>
+                                <option value="100000">100K</option>
+                                <option value="200000">200K</option>
+                                <option value="500000">500K</option>
+                                <option value="1000000">1M</option>
+                            </select>
+                            <select id="likes-max">
+                                <option value="">Max Likes</option>
+                                <option value="1000">1K</option>
+                                <option value="2000">2K</option>
+                                <option value="5000">5K</option>
+                                <option value="10000">10K</option>
+                                <option value="20000">20K</option>
+                                <option value="50000">50K</option>
+                                <option value="100000">100K</option>
+                                <option value="200000">200K</option>
+                                <option value="500000">500K</option>
+                                <option value="1000000">1M</option>
+                                <option value="2000000">2M</option>
+                                <option value="5000000">5M</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <div class="zoom-instructions">
@@ -268,6 +343,74 @@
                     </div>
                 </div>
                 <div class="chart-container" style="min-height: 600px;"></div>
+            </div>
+
+            <div id="category-engagement" class="visualization">
+                <h2>Category Engagement (Likes • Comments • Dislikes)</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Compare engagement components across categories.</p>
+                    <p><strong>How to Read:</strong> Stacked bars show total Likes, Comments, and Dislikes per category. Use the country filter.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="category-engagement-country-filter">Filter by Country:</label>
+                        <select id="category-engagement-country-filter">
+                            <option value="all">🌍 Global (All Countries)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 480px;"></div>
+            </div>
+
+            <div id="top-videos-bubble" class="visualization">
+                <h2>Top Videos Bubble Chart</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Spot the highest-viewed videos at a glance.</p>
+                    <p><strong>How to Read:</strong> Each bubble is a video; size = views, color = likes-to-views ratio. Tooltips show details.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="bubble-country-filter">Filter by Country:</label>
+                        <select id="bubble-country-filter">
+                            <option value="all">🌍 Global (All Countries)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="bubble-limit">Number of Videos:</label>
+                        <select id="bubble-limit">
+                            <option value="20">Top 20</option>
+                            <option value="30" selected>Top 30</option>
+                            <option value="50">Top 50</option>
+                            <option value="100">Top 100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 520px;"></div>
+            </div>
+
+            <div id="channel-leaderboard" class="visualization">
+                <h2>Top Channels Leaderboard</h2>
+                <div class="chart-description">
+                    <p><strong>Purpose:</strong> Rank channels by total views.</p>
+                    <p><strong>How to Read:</strong> Bars show total views per channel. Use filters to pick a country or change the list size.</p>
+                </div>
+                <div class="filter-controls">
+                    <div class="control-group">
+                        <label for="channel-leaderboard-country-filter">Filter by Country:</label>
+                        <select id="channel-leaderboard-country-filter">
+                            <option value="all">🌍 Global (All Countries)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="channel-leaderboard-limit">Number of Channels:</label>
+                        <select id="channel-leaderboard-limit">
+                            <option value="10">Top 10</option>
+                            <option value="25" selected>Top 25</option>
+                            <option value="50">Top 50</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 500px;"></div>
             </div>
 
         </main>

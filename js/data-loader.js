@@ -185,7 +185,7 @@ class DataLoader {
     }
 
     // Get views vs likes data for scatter plot
-    getViewsVsLikes(sampleSize = 500, country = 'all') {
+    getViewsVsLikes(sampleSize = 500, country = 'all', filters = {}) {
         let videos;
         
         if (country === 'all') {
@@ -194,9 +194,16 @@ class DataLoader {
             videos = this.videoData[country] || [];
         }
         
+        const minViews = Number.isFinite(filters.minViews) ? filters.minViews : 0;
+        const maxViews = Number.isFinite(filters.maxViews) ? filters.maxViews : Infinity;
+        const minLikes = Number.isFinite(filters.minLikes) ? filters.minLikes : 0;
+        const maxLikes = Number.isFinite(filters.maxLikes) ? filters.maxLikes : Infinity;
+
         // Sample data for performance
         const sampled = videos
             .filter(video => video.views > 0 && video.likes > 0)
+            .filter(video => video.views >= minViews && video.views <= maxViews)
+            .filter(video => video.likes >= minLikes && video.likes <= maxLikes)
             .sort(() => 0.5 - Math.random())
             .slice(0, sampleSize);
         
@@ -314,6 +321,44 @@ class DataLoader {
                 country: video.country,
                 category: video.category_name
             }));
+    }
+
+    // Top videos by views with optional country filter
+    getTopVideosByViewsFiltered(limit = 30, country = 'all') {
+        let videos = Object.values(this.videoData).flat();
+        if (country !== 'all') {
+            videos = videos.filter(v => v.country === country);
+        }
+        return videos
+            .filter(v => v.views > 0)
+            .sort((a, b) => b.views - a.views)
+            .slice(0, limit)
+            .map(video => ({
+                id: video.video_id || video.title,
+                title: video.title,
+                views: video.views,
+                likes: video.likes,
+                comments: video.comment_count,
+                country: video.country,
+                category: video.category_name,
+                ratio: video.views > 0 ? video.likes / video.views : 0
+            }));
+    }
+
+    // Engagement by category (likes, dislikes, comments)
+    getCategoryEngagementByCountry(country = 'all') {
+        const result = {};
+        const source = country === 'all' ? Object.values(this.videoData).flat() : (this.videoData[country] || []);
+        source.forEach(v => {
+            const cat = v.category_name || 'Unknown';
+            if (!result[cat]) {
+                result[cat] = { Likes: 0, Comments: 0, Dislikes: 0 };
+            }
+            result[cat].Likes += v.likes || 0;
+            result[cat].Comments += v.comment_count || 0;
+            result[cat].Dislikes += v.dislikes || 0;
+        });
+        return result; // { category: { Likes, Comments, Dislikes } }
     }
 
     // Get top channels by engagement
@@ -470,6 +515,15 @@ class DataLoader {
         return allChannels
             .filter(channel => channel.countries.includes(country))
             .slice(0, limit);
+    }
+
+    // Reuse for leaderboard: returns channels like getAllChannels, optionally filtered and limited
+    getChannelLeaderboard(limit = 25, country = 'all') {
+        let channels = this.getAllChannels();
+        if (country !== 'all') {
+            channels = channels.filter(ch => ch.countries.includes(country));
+        }
+        return channels.slice(0, limit);
     }
 
     // Get heatmap data for category distribution by country

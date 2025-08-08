@@ -79,6 +79,25 @@ class YouTubeDataVisualization {
             });
         }
 
+        // Scatter range inputs listeners
+        const viewsMinEl = document.getElementById('views-min');
+        const viewsMaxEl = document.getElementById('views-max');
+        const likesMinEl = document.getElementById('likes-min');
+        const likesMaxEl = document.getElementById('likes-max');
+
+        const onScatterFilterChange = () => {
+            if (this.currentVisualization === 'scatter') {
+                const country = document.getElementById('scatter-country-filter')?.value || 'all';
+                this.updateScatterByCountry(country);
+            }
+        };
+
+        [viewsMinEl, viewsMaxEl, likesMinEl, likesMaxEl].forEach(el => {
+            if (el) {
+                el.addEventListener('change', onScatterFilterChange);
+            }
+        });
+
         // Handle window resize
         window.addEventListener('resize', () => {
             if (this.isDataLoaded && this.currentVisualization !== 'overview') {
@@ -100,6 +119,9 @@ class YouTubeDataVisualization {
         this.setupTagEvolutionEventListeners();
         this.setupTagFlowEventListeners();
         this.setupPublishingTimingEventListeners();
+        this.setupCategoryEngagementListeners();
+        this.setupTopVideosBubbleListeners();
+        this.setupChannelLeaderboardListeners();
 
         // Setup heatmap filter listener
         const heatmapView = document.getElementById('heatmap-category-filter');
@@ -196,7 +218,8 @@ class YouTubeDataVisualization {
 
                 case 'scatter':
                     const selectedScatterCountry = document.getElementById('scatter-country-filter')?.value || 'all';
-                    const scatterData = this.dataLoader.getViewsVsLikes(300, selectedScatterCountry);
+                    const filters = this.getScatterFilters();
+                    const scatterData = this.dataLoader.getViewsVsLikes(300, selectedScatterCountry, filters);
                     this.visualizations.createScatterPlot(scatterData, container, selectedScatterCountry);
                     break;
 
@@ -229,6 +252,18 @@ class YouTubeDataVisualization {
             case 'tag-flow':
                 this.renderTagFlow(container);
                 break;
+
+                case 'category-engagement':
+                    this.renderCategoryEngagement(container);
+                    break;
+
+                case 'top-videos-bubble':
+                    this.renderTopVideosBubble(container);
+                    break;
+
+                case 'channel-leaderboard':
+                    this.renderChannelLeaderboard(container);
+                    break;
 
                 default:
                     console.warn(`Unknown visualization type: ${vizType}`);
@@ -366,12 +401,36 @@ class YouTubeDataVisualization {
         if (!container) return;
 
         try {
-            const scatterData = this.dataLoader.getViewsVsLikes(300, country);
+            const filters = this.getScatterFilters();
+            const scatterData = this.dataLoader.getViewsVsLikes(300, country, filters);
             this.visualizations.createScatterPlot(scatterData, container, country);
         } catch (error) {
             console.error(`Error updating scatter plot for country ${country}:`, error);
             this.showVisualizationError(container, `Error updating visualization: ${error.message}`);
         }
+    }
+
+    // Read scatter filters from inputs
+    getScatterFilters() {
+        const viewsMinEl = document.getElementById('views-min');
+        const viewsMaxEl = document.getElementById('views-max');
+        const likesMinEl = document.getElementById('likes-min');
+        const likesMaxEl = document.getElementById('likes-max');
+
+        let minViews = viewsMinEl && viewsMinEl.value !== '' ? Number(viewsMinEl.value) : undefined;
+        let maxViews = viewsMaxEl && viewsMaxEl.value !== '' ? Number(viewsMaxEl.value) : undefined;
+        let minLikes = likesMinEl && likesMinEl.value !== '' ? Number(likesMinEl.value) : undefined;
+        let maxLikes = likesMaxEl && likesMaxEl.value !== '' ? Number(likesMaxEl.value) : undefined;
+
+        // Basic validation: swap if min > max
+        if (Number.isFinite(minViews) && Number.isFinite(maxViews) && minViews > maxViews) {
+            [minViews, maxViews] = [maxViews, minViews];
+        }
+        if (Number.isFinite(minLikes) && Number.isFinite(maxLikes) && minLikes > maxLikes) {
+            [minLikes, maxLikes] = [maxLikes, minLikes];
+        }
+
+        return { minViews, maxViews, minLikes, maxLikes };
     }
 
     // Show loading message
@@ -708,6 +767,75 @@ class YouTubeDataVisualization {
         }
     }
 
+    // Render Category Engagement
+    renderCategoryEngagement(container) {
+        try {
+            const country = document.getElementById('category-engagement-country-filter')?.value || 'all';
+            const data = this.dataLoader.getCategoryEngagementByCountry(country);
+            this.visualizations.createCategoryEngagementStacked(data, container);
+        } catch (error) {
+            console.error('Error rendering Category Engagement:', error);
+            this.showVisualizationError(container, `Error rendering Category Engagement: ${error.message}`);
+        }
+    }
+
+    // Render Top Videos Bubble
+    renderTopVideosBubble(container) {
+        try {
+            const country = document.getElementById('bubble-country-filter')?.value || 'all';
+            const limit = parseInt(document.getElementById('bubble-limit')?.value || '30', 10);
+            const videos = this.dataLoader.getTopVideosByViewsFiltered(limit, country);
+            this.visualizations.createTopVideosBubble(videos, container);
+        } catch (error) {
+            console.error('Error rendering Top Videos Bubble:', error);
+            this.showVisualizationError(container, `Error rendering Top Videos Bubble: ${error.message}`);
+        }
+    }
+
+    setupCategoryEngagementListeners() {
+        const select = document.getElementById('category-engagement-country-filter');
+        if (select) {
+            select.addEventListener('change', () => {
+                const container = document.querySelector('#category-engagement .chart-container');
+                if (container) this.renderCategoryEngagement(container);
+            });
+        }
+    }
+
+    setupTopVideosBubbleListeners() {
+        const countrySel = document.getElementById('bubble-country-filter');
+        const limitSel = document.getElementById('bubble-limit');
+        const handler = () => {
+            const container = document.querySelector('#top-videos-bubble .chart-container');
+            if (container) this.renderTopVideosBubble(container);
+        };
+        if (countrySel) countrySel.addEventListener('change', handler);
+        if (limitSel) limitSel.addEventListener('change', handler);
+    }
+
+    renderChannelLeaderboard(container) {
+        try {
+            const country = document.getElementById('channel-leaderboard-country-filter')?.value || 'all';
+            const limit = parseInt(document.getElementById('channel-leaderboard-limit')?.value || '25', 10);
+            const data = this.dataLoader.getChannelLeaderboard(limit, country);
+            this.visualizations.createChannelLeaderboard(data, container);
+        } catch (error) {
+            console.error('Error rendering Channel Leaderboard:', error);
+            this.showVisualizationError(container, `Error rendering Channel Leaderboard: ${error.message}`);
+        }
+    }
+
+    setupChannelLeaderboardListeners() {
+        const countrySel = document.getElementById('channel-leaderboard-country-filter');
+        const limitSel = document.getElementById('channel-leaderboard-limit');
+        const handler = () => {
+            const container = document.querySelector('#channel-leaderboard .chart-container');
+            if (container) this.renderChannelLeaderboard(container);
+        };
+        if (countrySel) countrySel.addEventListener('change', handler);
+        if (limitSel) limitSel.addEventListener('change', handler);
+    }
+
     // Setup tag racing competition event listeners
     setupTagEvolutionEventListeners() {
         const countryFilter = document.getElementById('tag-country-filter');
@@ -816,6 +944,42 @@ class YouTubeDataVisualization {
                     timingCountrySelect.appendChild(option);
                 });
             }
+
+            // Populate Category Engagement dropdown
+            const catEngCountry = document.getElementById('category-engagement-country-filter');
+            if (catEngCountry) {
+                catEngCountry.innerHTML = '<option value="all">🌍 Global (All Countries)</option>';
+                countries.slice(1).forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.code;
+                    option.textContent = country.name;
+                    catEngCountry.appendChild(option);
+                });
+            }
+
+            // Populate Bubble chart dropdown
+            const bubbleCountry = document.getElementById('bubble-country-filter');
+            if (bubbleCountry) {
+                bubbleCountry.innerHTML = '<option value="all">🌍 Global (All Countries)</option>';
+                countries.slice(1).forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.code;
+                    option.textContent = country.name;
+                    bubbleCountry.appendChild(option);
+                });
+            }
+
+            // Populate Channel Leaderboard dropdown
+            const clCountry = document.getElementById('channel-leaderboard-country-filter');
+            if (clCountry) {
+                clCountry.innerHTML = '<option value="all">🌍 Global (All Countries)</option>';
+                countries.slice(1).forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.code;
+                    option.textContent = country.name;
+                    clCountry.appendChild(option);
+                });
+            }
             
             console.log(`Populated country dropdowns with ${countries.length} options`);
         }
@@ -832,12 +996,15 @@ class YouTubeDataVisualization {
             'pie-chart': 'Prakashraj Kalidoss, 8989436',
             'timeline': 'Sheharyar Rasheed Hashmi,8998448',
             'scatter': 'Sheharyar Rasheed Hashmi,8998448',
-            'heatmap': 'Prakashraj Kalidoss, 8989436',
+            'heatmap': 'Sheharyar Rasheed Hashmi,8998448',
             'treemap': 'Jigisha Ishwarbhai Prajapati,8970201',
+            'channel-leaderboard': 'Prakashraj Kalidoss, 8989436',
             'engagement': 'Prakashraj Kalidoss, 8989436',
             'publishing-timing': 'Tarun Kumar Abburi, 8992974',
             'tag-evolution': 'Tarun Kumar Abburi, 8992974',
             'tag-flow': 'Tarun Kumar Abburi, 8992974'
+            , 'category-engagement': 'Jigisha Ishwarbhai Prajapati,8970201'
+            , 'top-videos-bubble': 'Prakashraj Kalidoss, 8989436'
         };
         
         const credits = chartAuthors[chartType] || chartAuthors['overview'];

@@ -16,7 +16,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 20px; /* revert top padding since nav is no longer fixed */
     background-color: white;
     min-height: 100vh;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -54,9 +54,7 @@ header p {
     padding: 12px 16px;
     background-color: rgba(236, 240, 241, 0.85);
     border-radius: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    position: static; /* no sticky/fixed behavior */
     backdrop-filter: blur(8px);
     border: 1px solid rgba(0,0,0,0.06);
 }
@@ -175,6 +173,61 @@ header p {
     background-color: white;
     text-overflow: ellipsis;
     overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    height: 40px;
+}
+
+/* Inputs/selects inside filter controls (for scatter filters) */
+.filter-controls select,
+.filter-controls input[type="number"] {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* ===== Scatter filter layout overrides to prevent overlap ===== */
+#scatter .filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 12px 16px;
+}
+
+#scatter .control-group {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 12px;
+    align-items: center;
+}
+
+#scatter .control-group select {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Make paired inputs look like a single control similar to a select */
+#scatter .control-group .range-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+#scatter .control-group .range-inputs input[type="number"] {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background-color: white;
+}
+
+@media (max-width: 640px) {
+    #scatter .control-group {
+        grid-template-columns: 1fr;
+    }
+    #scatter .control-group label {
+        justify-self: start;
+    }
+    #scatter .control-group .range-inputs {
+        grid-template-columns: 1fr;
+    }
 }
 
 #channel-count-display {
@@ -637,9 +690,7 @@ footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
+    .container { padding: 10px; }
     
     header h1 {
         font-size: 2em;
@@ -1423,9 +1474,7 @@ footer p {
     }
     
     /* Container mobile */
-    .container {
-        padding: 0 10px;
-    }
+    .container { padding: 0 10px; }
     
     /* Chart-specific mobile optimizations */
     #tag-flow .chart-container {
