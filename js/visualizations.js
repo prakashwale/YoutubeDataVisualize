@@ -530,6 +530,9 @@ class Visualizations {
         // Create zoom behavior and apply to entire SVG
         const zoom = d3.zoom()
             .scaleExtent([0.1, 50])
+            // Keep the zoomed viewport within the chart area to avoid losing data off-screen
+            .translateExtent([[0, 0], [width, height]])
+            .extent([[0, 0], [width, height]])
             .on('zoom', (event) => {
                 const { transform } = event;
                 
